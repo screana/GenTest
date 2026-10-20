@@ -1,0 +1,28 @@
+[project]
+name = "gentest"
+version = "0.1.0"
+description = "設計書からテスト仕様書・テストスクリプトを生成し、品質をエビデンス付きで評価するモック"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-genai>=2.31.0",
+    "pydantic>=2",
+    "python-dotenv>=1.2.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.3,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "pytest>=8",
+    "pytest-cov>=6",
+    "ruff>=0.17.1",
+]
+
+[tool.pytest.ini_options]
+# テスト対象の jpholiday は target/ に置く（バグ版は run.py が PYTHONPATH で差し替える）
+pythonpath = ["target"]
+testpaths = ["baseline_tests"]
