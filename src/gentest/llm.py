@@ -9,6 +9,7 @@ API の利用料を抑えるため、応答は outputs/cache/ にキャッシュ
 
 import hashlib
 import json
+from collections.abc import Callable
 from functools import cache
 from pathlib import Path
 
@@ -46,14 +47,15 @@ def _cache_key(contents: Contents, **params: object) -> str:
     return h.hexdigest()
 
 
-def _generate(
+def _generate[R](
     contents: Contents,
     config: types.GenerateContentConfig,
     *,
     model: str,
     cache_tag: str,
     schema_name: str | None,
-) -> str:
+    parse: Callable[[str], R],
+) -> R:
     key = _cache_key(
         contents,
         model=model,
@@ -64,15 +66,17 @@ def _generate(
     )
     path = CACHE_DIR / f"{key}.txt"
     if path.exists():
-        return path.read_text(encoding="utf-8")
+        return parse(path.read_text(encoding="utf-8"))
 
     res = get_client().models.generate_content(
         model=model, contents=contents, config=config
     )
     text = res.text or ""
+    # 読めない応答（途中で切れた JSON など）をキャッシュすると、同じ入力で毎回失敗するため先に検証する
+    result = parse(text)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
-    return text
+    return result
 
 
 def generate_text(
@@ -88,7 +92,7 @@ def generate_text(
         temperature=temperature,
     )
     return _generate(
-        contents, config, model=model, cache_tag=cache_tag, schema_name=None
+        contents, config, model=model, cache_tag=cache_tag, schema_name=None, parse=str
     )
 
 
@@ -108,12 +112,12 @@ def generate_structured[T: BaseModel](
         response_mime_type="application/json",
         response_schema=schema,
     )
-    text = _generate(
+    return _generate(
         contents,
         config,
         model=model,
         cache_tag=cache_tag,
         # スキーマを変更したら古いキャッシュを使わないよう、定義全体をキーに含める
         schema_name=json.dumps(schema.model_json_schema(), sort_keys=True),
+        parse=schema.model_validate_json,
     )
-    return schema.model_validate_json(text)

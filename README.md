@@ -14,6 +14,7 @@
 | `checklists/` | テスト観点チェックリスト |
 | `bugs/` | 仕込みバグ |
 | `src/gentest/` | 生成・検証・実行のパイプライン |
+| `tests/` | パイプラインのテスト（LLM を呼ばない部分） |
 | `notes/decision_log.md` | 判断の記録 |
 
 ## セットアップ

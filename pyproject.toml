@@ -1,7 +1,7 @@
 [project]
 name = "gentest"
 version = "0.1.0"
-description = "設計書からテスト仕様書・テストスクリプトを生成し、品質をエビデンス付きで評価するモック"
+description = "設計書とコードからテスト仕様書・テストスクリプトを生成し、品質をエビデンス付きで評価するモック"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -25,4 +25,4 @@ dev = [
 [tool.pytest.ini_options]
 # テスト対象の jpholiday は target/ に置く（バグ版は run.py が PYTHONPATH で差し替える）
 pythonpath = ["target"]
-testpaths = ["baseline_tests"]
+testpaths = ["baseline_tests", "tests"]

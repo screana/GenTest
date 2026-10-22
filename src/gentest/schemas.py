@@ -18,6 +18,7 @@ class RequirementKind(StrEnum):
     SPECIAL = "特例"
     DEPENDENCY = "依存関係"
     ERROR = "異常系"
+    UNDEFINED = "未定義事項"
 
 
 class Requirement(BaseModel):
@@ -40,16 +41,31 @@ class Evidence(BaseModel):
     )
 
 
+class CaseStatus(StrEnum):
+    CONFIRMED = "確定"
+    PENDING = "確認待ち"
+
+
 class SpecCase(BaseModel):
     tc_id: str = Field(description="テストケースID。TC-001 形式の連番")
-    target: str = Field(description="テスト対象の関数・クラス名")
+    target: str = Field(description="テスト対象の関数名")
     viewpoint: str = Field(description="観点（観点チェックリストの項目名）")
     precondition: str = Field(description="前提条件。なければ空文字")
     input: str = Field(
-        description="入力値。Python のリテラル表記（例: datetime.date(2024, 1, 8)）"
+        description="関数に渡す引数。Python の式で書き、複数あるときはカンマで区切る。"
+        "全体を括弧で囲まない（例: datetime.date(2024, 1, 8) / 2017, 5）"
     )
-    expected: str = Field(
-        description="期待結果。Python のリテラル表記（例: '成人の日'、True、None）"
+    # 確認待ち（D-09）のケースは期待値の根拠がないので null にする。
+    # 値を書く余地を残すと、推測で埋めてしまうため
+    status: CaseStatus = Field(
+        description="期待結果の根拠が設計書にあれば「確定」、9章の未定義事項に当たれば「確認待ち」"
+    )
+    expected: str | None = Field(
+        description="期待結果。Python のリテラル表記（例: '成人の日'、True、None）。"
+        "確認待ちのときは null"
+    )
+    question: str | None = Field(
+        description="確認待ちのとき、顧客に確認する内容。確定のときは null"
     )
     evidence: list[Evidence] = Field(min_length=1)
 
